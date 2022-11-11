@@ -2,14 +2,14 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from config.exception_handler import (
+from app.config.exception_handler import (
     custom_exception_handler,
     exception_handler,
     http_exception_handler,
     validation_exception_handler,
 )
-from config.exceptions import BaseException
-from routes.empleado import empleado
+from app.config.exceptions import BaseException
+from app.routes.empleado import empleado
 
 app = FastAPI()
 

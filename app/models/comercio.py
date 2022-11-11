@@ -11,8 +11,9 @@ from sqlalchemy.sql.sqltypes import (
     Integer,
     String,
 )
+from sqlalchemy_utils import UUIDType
 
-from config.db import Base, engine
+from app.config.db import Base, engine
 
 
 class Comercio(Base):
@@ -23,12 +24,14 @@ class Comercio(Base):
         primary_key=True,
         autoincrement=True,
     )
-    uuid = Column(CHAR(32), default=str(_uuid.uuid4().hex), nullable=False)
+    uuid = Column(UUIDType(binary=False), default=_uuid.uuid4, nullable=False)
     nombre = Column(String(100), nullable=False)
     activo = Column(Boolean(), default=True, nullable=False)
     email_contacto = Column(String(50))
     telefono_contacto = Column(String(15))
-    api_key = Column(CHAR(32), default=str(_uuid.uuid4().hex), nullable=False)
+    api_key = Column(
+        UUIDType(binary=False), default=_uuid.uuid4, nullable=False
+    )
     fecha_creacion = Column(
         DateTime, default=_dt.datetime.utcnow, nullable=False
     )

@@ -1,13 +1,14 @@
 import datetime as _dt
-from typing import List, Optional
+from typing import Any, List, Optional, Union
 from uuid import UUID
 
+from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, root_validator
 
 
 class EmpleadoSchema(BaseModel):
     id: Optional[str]
-    uuid: Optional[str]
+    uuid: Optional[UUID]
     nombre: str
     apellidos: str
     nombre_completo: Optional[str]
@@ -24,7 +25,7 @@ class EmpleadoSchema(BaseModel):
 
     @root_validator
     def compute_uuid(cls, values):
-        values["id"] = str(UUID(values["uuid"]))
+        values["id"] = str(values["uuid"])
         return values
 
     class Config:
@@ -37,7 +38,30 @@ class NewEmpleado(BaseModel):
     pin: str
 
 
-class _BaseResponse(BaseModel):
+class UpdateEmpleado(BaseModel):
+    nombre: str
+    apellidos: str
+    pin: str
+    activo: Any = "NO_EXISTS"
+
+    @root_validator
+    def compute_activo(cls, values):
+        """Valida si existe el campo activo
+        Se tiene que usar el tipo Any por que si se usa el tipo str
+        cuando se envia int 0 se transforma a "0" y no se desea eso,
+        la unica forma que sea false debe ser con "0" desde la peticion.
+
+        Se usa el NO_EXISTS como default, para identificar cuando no se envia
+        el campo activo, ya que como el campo es Any acepta cualquier cosa
+        hasta los nulos
+        """
+
+        if values["activo"] == "NO_EXISTS":
+            raise RequestValidationError()
+        return values
+
+
+class BaseResponse(BaseModel):
     rc: Optional[int] = 0
     msg: Optional[str] = "Ok"
 
@@ -47,9 +71,9 @@ class _BaseResponse(BaseModel):
         }
 
 
-class EmpleadoResponse(_BaseResponse):
+class EmpleadoResponse(BaseResponse):
     data: Optional[EmpleadoSchema]
 
 
-class EmpleadosResponse(_BaseResponse):
+class EmpleadosResponse(BaseResponse):
     data: Optional[List[EmpleadoSchema]]

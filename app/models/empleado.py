@@ -11,15 +11,16 @@ from sqlalchemy.sql.sqltypes import (
     Integer,
     String,
 )
+from sqlalchemy_utils import UUIDType
 
-from config.db import Base, engine
+from app.config.db import Base, engine
 
 
 class Empleado(Base):
     __tablename__ = "main_empleado"
 
     id = Column(BigInteger().with_variant(Integer, "sqlite"), primary_key=True)
-    uuid = Column(CHAR(32), default=str(_uuid.uuid4().hex), nullable=False)
+    uuid = Column(UUIDType(binary=False), default=_uuid.uuid4)
     nombre = Column(String(40), nullable=False)
     apellidos = Column(String(40), nullable=False)
     pin = Column(String(6), nullable=False)
