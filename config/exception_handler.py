@@ -6,7 +6,7 @@ from .exceptions import BaseException
 
 # HANDLER ERRORS
 def http_exception_handler(_, exc: HTTPException):
-    """ Cambia la salida del error al formato estandar """
+    """Cambia la salida del error al formato estandar"""
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -15,8 +15,9 @@ def http_exception_handler(_, exc: HTTPException):
         },
     )
 
+
 def validation_exception_handler(_, exc: HTTPException):
-    """ Cambia la salida del error al formato estandar cuando faltan datos """
+    """Cambia la salida del error al formato estandar cuando faltan datos"""
     return JSONResponse(
         status_code=200,
         content={
@@ -27,7 +28,7 @@ def validation_exception_handler(_, exc: HTTPException):
 
 
 def exception_handler(_, exc: Exception):
-    """ Cambia la salida del error al formato estandar cuando faltan datos """
+    """Cambia la salida del error al formato estandar cuando faltan datos"""
     return JSONResponse(
         status_code=200,
         content={
@@ -37,9 +38,8 @@ def exception_handler(_, exc: Exception):
     )
 
 
-
 def custom_exception_handler(_, exc: BaseException):
-    """ Manejo de errores personalizado """
+    """Manejo de errores personalizado"""
     return JSONResponse(
         status_code=200,
         content=exc.to_dict(),

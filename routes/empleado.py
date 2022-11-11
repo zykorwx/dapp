@@ -1,49 +1,68 @@
-from typing import Any
+from typing import List
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
-from config.db import session
+from config.db import get_db
 from config.exceptions import DuplicatedPinError
 from models.empleado import Empleado
-from schemas.empleado import (EmpleadoResponse, EmpleadoSchema,
-                              EmpleadosResponse, NewEmpleado)
+from schemas.empleado import (
+    EmpleadoResponse,
+    EmpleadoSchema,
+    EmpleadosResponse,
+    NewEmpleado,
+)
 
-empleado = APIRouter()
+empleado = APIRouter(tags=["Empleados"])
+_empleados_exclude = {"data": {"__all__": {"nombre", "apellidos", "uuid"}}}
+_empleado_exclude = {"data": {"nombre", "apellidos", "uuid"}}
 
 
-@empleado.get('/empleados', response_model=EmpleadosResponse)
-def get_empleados():
-    return session.query(Empleado).all()
+@empleado.get(
+    "/empleados",
+    response_model=EmpleadosResponse,
+    response_model_exclude=_empleados_exclude,
+)
+def get_empleados(db: Session = Depends(get_db)):
+    empleados: List[EmpleadoSchema] = []
+    for empleado in db.query(Empleado).all():
+        empleados.append(EmpleadoSchema.from_orm(empleado))
+    response = EmpleadosResponse(data=empleados)
+    return response
 
 
-@empleado.get('/empleados/{uuid}', response_model=EmpleadoResponse)
-def get_empleado(uuid: str) -> Any:
-    return session.get(Empleado).filter_by(uuid=uuid).first()
+@empleado.get("/empleados/{uuid}", response_model=EmpleadoResponse)
+def get_empleado(uuid: str, db: Session = Depends(get_db)):
+    empleado = EmpleadoSchema.from_orm(
+        db.get(Empleado).filter_by(uuid=uuid).first()
+    )
+    return EmpleadoResponse(data=empleado)
 
 
 @empleado.post(
-    '/empleados',
+    "/empleados",
     response_model=EmpleadoResponse,
     status_code=200,
-    response_model_exclude={'data': {'nombre', 'apellidos', 'uuid'}})
-def create_empleado(empleado: NewEmpleado):
+    response_model_exclude=_empleado_exclude,
+)
+def create_empleado(empleado: NewEmpleado, db: Session = Depends(get_db)):
     new_empleado: Empleado = Empleado(
         nombre=empleado.nombre,
         apellidos=empleado.apellidos,
         pin=empleado.pin,
         comercio_id=1,
     )
-    session.add(new_empleado)
+    db.add(new_empleado)
     try:
-        session.commit()
+        db.commit()
     except IntegrityError:
-        session.rollback()
+        db.rollback()
         raise DuplicatedPinError()
     empleado_schema = EmpleadoSchema.from_orm(new_empleado)
-    response = EmpleadoResponse()
-    response.data = empleado_schema
+    response = EmpleadoResponse(data=empleado_schema)
     return response
+
 
 """
 @user.get('/users')

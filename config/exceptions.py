@@ -4,8 +4,8 @@ class BaseException(Exception):
 
     def to_dict(self) -> dict:
         return {
-            'rc': self.rc,
-            'msg': self.msg,
+            "rc": self.rc,
+            "msg": self.msg,
         }
 
 

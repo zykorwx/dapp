@@ -2,7 +2,7 @@ import datetime as _dt
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, root_validator, validator
+from pydantic import BaseModel, root_validator
 
 
 class EmpleadoSchema(BaseModel):
@@ -17,14 +17,14 @@ class EmpleadoSchema(BaseModel):
 
     @root_validator
     def compute_nombre_completo(cls, values):
-        if values['nombre_completo']:
+        if values["nombre_completo"]:
             return values
-        values['nombre_completo'] = f"{values['nombre']} {values['apellidos']}"
+        values["nombre_completo"] = f"{values['nombre']} {values['apellidos']}"
         return values
-    
+
     @root_validator
     def compute_uuid(cls, values):
-        values['id'] = str(UUID(values['uuid']))
+        values["id"] = str(UUID(values["uuid"]))
         return values
 
     class Config:
@@ -39,11 +39,11 @@ class NewEmpleado(BaseModel):
 
 class _BaseResponse(BaseModel):
     rc: Optional[int] = 0
-    msg: Optional[str] = 'Ok'
+    msg: Optional[str] = "Ok"
 
     class Config:
         json_encoders = {
-            _dt.datetime: lambda v: v.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+            _dt.datetime: lambda v: v.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
         }
 
 
