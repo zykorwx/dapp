@@ -10,3 +10,4 @@ En el archivo requirements.txt están las librerías necesarias para ejecutar el
 
 `pip install -r requirements.txt`
 
+Basado en: https://github.com/alfaro28/comerciosempleados
