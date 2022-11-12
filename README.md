@@ -30,6 +30,8 @@ http://localhost:8000/redoc
 
 Algunos comentarios:
 
+ * Se respeto la estructura de la base de datos, de hecho la base de datos que incluye el proyecto funciona con los datos originales que me se incluían en el repositorio anterior, solo removí las tablas que no se usaban.
+
 * Aunque la documentación de swagger diga lo contrario, todos los errores se retornan de en el formato:
 
   ```json
