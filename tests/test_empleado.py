@@ -82,6 +82,24 @@ def test_get_all_empleados():
         _validate_response_empleado(empleado)
 
 
+def test_get_empleados():
+    """Debe regresar Please enter a valid id cuando sea PUT/DELETE"""
+
+    # PUT
+    response: Response = client.put("/empleados", auth=auth)
+    data = response.json()
+    assert response.status_code == 200
+    assert data["rc"] == -1001
+    assert data["msg"] == "Please enter a valid id"
+
+    # DELETE
+    response: Response = client.delete("/empleados", auth=auth)
+    data = response.json()
+    assert response.status_code == 200
+    assert data["rc"] == -1001
+    assert data["msg"] == "Please enter a valid id"
+
+
 # GET empleado
 def test_get_empleado():
     """Debe regresar un empleado o regresar Invalid id"""
