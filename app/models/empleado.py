@@ -36,7 +36,7 @@ class Empleado(Base):
 
     def __repr__(self):
         return (
-            f"User(id={self.id!r}, "
+            f"Empleado(id={self.id!r}, "
             f"name={self.nombre!r}, "
             f"apellidos={self.apellidos!r})"
         )

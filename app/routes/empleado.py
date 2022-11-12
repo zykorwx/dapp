@@ -4,8 +4,14 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.exc import IntegrityError, StatementError
 from sqlalchemy.orm import Session
 
+from app.config.authentication import get_auth
 from app.config.db import get_db
-from app.config.exceptions import DuplicatedPinError, InvalidEmpleadoError
+from app.config.exceptions import (
+    DuplicatedPinError,
+    InvalidEmpleadoError,
+    NoEmpleadoError,
+)
+from app.models.comercio import Comercio
 from app.models.empleado import Empleado
 from app.schemas.empleado import (
     BaseResponse,
@@ -16,9 +22,17 @@ from app.schemas.empleado import (
     UpdateEmpleado,
 )
 
-empleado = APIRouter(tags=["Empleados"])
+empleado = APIRouter(
+    tags=["Empleados"],
+)
 _empleados_exclude = {"data": {"__all__": {"nombre", "apellidos", "uuid"}}}
 _empleado_exclude = {"data": {"nombre", "apellidos", "uuid"}}
+
+
+@empleado.put("/empleados", include_in_schema=False)
+@empleado.delete("/empleados", include_in_schema=False)
+def need_id():
+    raise NoEmpleadoError()
 
 
 @empleado.get(
@@ -26,10 +40,10 @@ _empleado_exclude = {"data": {"nombre", "apellidos", "uuid"}}
     response_model=EmpleadosResponse,
     response_model_exclude=_empleados_exclude,
 )
-def get_empleados(db: Session = Depends(get_db)):
+def get_empleados(comercio: Comercio = Depends(get_auth)):
     """Regresa todos los empleados"""
     empleados: List[EmpleadoSchema] = []
-    for empleado in db.query(Empleado).all():
+    for empleado in comercio.empleados:
         empleados.append(EmpleadoSchema.from_orm(empleado))
     response = EmpleadosResponse(data=empleados)
     return response
@@ -40,11 +54,15 @@ def get_empleados(db: Session = Depends(get_db)):
     response_model=EmpleadoResponse,
     response_model_exclude=_empleado_exclude,
 )
-def get_empleado(uuid: str, db: Session = Depends(get_db)):
+def get_empleado(
+    uuid: str,
+    db: Session = Depends(get_db),
+    comercio: Comercio = Depends(get_auth),
+):
     """Obtiene un empleado por su UUID"""
     try:
         empleado_from_db: Union[Empleado, None] = (
-            db.query(Empleado).filter_by(uuid=uuid).first()
+            db.query(Empleado).filter_by(uuid=uuid, comercio=comercio).first()
         )
     except StatementError:
         raise InvalidEmpleadoError()
@@ -57,10 +75,16 @@ def get_empleado(uuid: str, db: Session = Depends(get_db)):
 
 
 @empleado.delete("/empleados/{uuid}", response_model=BaseResponse)
-def delete_empleado(uuid: str, db: Session = Depends(get_db)):
+def delete_empleado(
+    uuid: str,
+    db: Session = Depends(get_db),
+    comercio: Comercio = Depends(get_auth),
+):
     """Remueve un empleado por su UUID"""
     try:
-        deletes = db.query(Empleado).filter_by(uuid=uuid).delete()
+        deletes = (
+            db.query(Empleado).filter_by(uuid=uuid, comercio=comercio).delete()
+        )
         db.commit()
     except StatementError:
         raise InvalidEmpleadoError()
@@ -77,13 +101,17 @@ def delete_empleado(uuid: str, db: Session = Depends(get_db)):
     status_code=200,
     response_model_exclude=_empleado_exclude,
 )
-def create_empleado(empleado: NewEmpleado, db: Session = Depends(get_db)):
+def create_empleado(
+    empleado: NewEmpleado,
+    db: Session = Depends(get_db),
+    comercio: Comercio = Depends(get_auth),
+):
     """Crea un nuevo empleado"""
     new_empleado: Empleado = Empleado(
         nombre=empleado.nombre,
         apellidos=empleado.apellidos,
         pin=empleado.pin,
-        comercio_id=1,
+        comercio=comercio,
     )
     db.add(new_empleado)
     try:
@@ -102,12 +130,15 @@ def create_empleado(empleado: NewEmpleado, db: Session = Depends(get_db)):
     response_model_exclude=_empleado_exclude,
 )
 def update_empleado(
-    uuid: str, empleado: UpdateEmpleado, db: Session = Depends(get_db)
+    uuid: str,
+    empleado: UpdateEmpleado,
+    db: Session = Depends(get_db),
+    comercio: Comercio = Depends(get_auth),
 ):
     """Edita los datos de un empleado por su UUID"""
     try:
         empleado_from_db: Union[Empleado, None] = (
-            db.query(Empleado).filter_by(uuid=uuid).first()
+            db.query(Empleado).filter_by(uuid=uuid, comercio=comercio).first()
         )
     except StatementError:
         raise InvalidEmpleadoError()
