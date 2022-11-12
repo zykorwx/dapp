@@ -30,6 +30,15 @@ class EmpleadoSchema(BaseModel):
 
     class Config:
         orm_mode = True
+        schema_extra = {
+            "example": {
+                "id": "0f348928-3463-4e2d-b677-b9acc8f89438",
+                "nombre_completo": "Leonardo Pineda",
+                "pin": "000000",
+                "fecha_creacion": "2021-07-23T22:05:08.585083Z",
+                "activo": True,
+            }
+        }
 
 
 class NewEmpleado(BaseModel):
@@ -59,6 +68,16 @@ class UpdateEmpleado(BaseModel):
         if values["activo"] == "NO_EXISTS":
             raise RequestValidationError()
         return values
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "nombre": "string",
+                "apellidos": "string",
+                "pin": "string",
+                "activo": "0 is False",
+            }
+        }
 
 
 class BaseResponse(BaseModel):
